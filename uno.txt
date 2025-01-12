@@ -1,0 +1,58 @@
+#include <SoftwareSerial.h>  // Library for multiple serial connections
+
+#define trigPin 13
+#define echoPin 12
+#define motor 9       // PWM pin for vibration motor
+#define buzzer 8      // Buzzer connected to digital pin 8
+#define button 4      // Button connected to digital pin 4
+
+long previousDistance = 0;  // Variable to store the previous distance
+
+void setup() {
+    pinMode(trigPin, OUTPUT);
+    pinMode(echoPin, INPUT);
+    pinMode(motor, OUTPUT);
+    pinMode(buzzer, OUTPUT);
+    pinMode(button, INPUT_PULLUP); // Internal pull-up resistor for button
+    Serial.begin(9600);            // Serial Monitor
+    Serial.println("Setup complete");
+}
+
+void loop() {
+    long duration, distance;
+
+    // Trigger the ultrasonic sensor
+    digitalWrite(trigPin, LOW); 
+    delayMicroseconds(2); 
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10); 
+    digitalWrite(trigPin, LOW);
+
+    // Read the echo time and calculate distance
+    duration = pulseIn(echoPin, HIGH);
+    distance = (duration / 2) / 29.1;
+
+    // Print distance to Serial Monitor
+    Serial.print("Distance: ");
+    Serial.print(distance);
+    Serial.println(" cm");
+
+    // Control motor intensity based on distance
+    if (distance < 100) {
+        int motorIntensity = map(distance, 0, 100, 255, 0);  // Maps distance to PWM range
+        analogWrite(motor, motorIntensity); // Set motor intensity
+    } else {
+        analogWrite(motor, 0); // Turn off motor if distance >= 100 cm
+    }
+
+    // Check if distance has increased compared to the previous distance
+    if (distance > previousDistance) {  // If the current distance is greater than the previous distance
+        Serial.println("Signal: Distance increased!");  // Send signal (can be used to trigger an alert)
+        // Add code here to send a signal (e.g., call a function to send an alert)
+    }
+
+    // Update previousDistance for the next loop
+    previousDistance = distance;
+
+    delay(400); // Wait for 400 milliseconds
+}
